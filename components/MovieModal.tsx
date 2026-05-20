@@ -16,6 +16,7 @@ interface MovieDetail {
   genres: { id: number; name: string }[];
   imdbRating: string | null;
   rtRating: string | null;
+  lbRating: string | null;
   imdbLink: string | null;
   rtLink: string | null;
   lbLink: string | null;
@@ -166,7 +167,7 @@ export default function MovieModal({ movieId, onClose }: Props) {
                 />
                 <RatingBadge
                   label="Letterboxd"
-                  score={null}
+                  score={detail.lbRating}
                   link={detail.lbLink}
                   color="bg-green-600/20"
                   icon={<LetterboxdIcon />}
