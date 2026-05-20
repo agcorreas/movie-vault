@@ -28,7 +28,13 @@ export default function MovieCard({ title, posterPath, releaseDate, onClick }: P
           className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.07]"
         />
       ) : (
-        <div className="flex h-full items-center justify-center text-gray-500 text-sm px-3 text-center leading-snug">{title}</div>
+        <div className="flex h-full flex-col items-center justify-center gap-2.5 px-4 text-center">
+          <svg className="w-8 h-8 text-white/10 shrink-0" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3.375 19.5h17.25m-17.25 0a1.125 1.125 0 0 1-1.125-1.125M3.375 19.5h1.5C5.496 19.5 6 18.996 6 18.375m-3.75.125V6.375A1.125 1.125 0 0 1 3.375 5.25h1.5C5.496 5.25 6 5.754 6 6.375m0 12V6.375m0 0a1.125 1.125 0 0 1 1.125-1.125h9.75a1.125 1.125 0 0 1 1.125 1.125M6 6.375v12m12-12v12m0-12a1.125 1.125 0 0 1 1.125 1.125v11.25A1.125 1.125 0 0 1 18 19.5h-1.5" />
+          </svg>
+          <p className="font-[family-name:var(--font-geist-sans)] text-white/70 text-[13px] font-medium leading-snug tracking-[-0.01em] line-clamp-4">{title}</p>
+          {year && <p className="font-[family-name:var(--font-geist-sans)] text-white/25 text-[11px] font-normal tracking-[0.06em] uppercase">{year}</p>}
+        </div>
       )}
 
       {/* Ambient glow ring on hover */}

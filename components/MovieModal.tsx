@@ -108,20 +108,27 @@ export default function MovieModal({ movieId, onClose }: Props) {
         ) : !detail ? (
           <div className="flex items-center justify-center h-64 text-gray-400">Failed to load.</div>
         ) : (
-          <div className="flex flex-col sm:flex-row gap-6 p-6 -mt-10 relative">
+          <div className={`flex flex-col sm:flex-row gap-6 p-6 relative ${detail.backdrop_path ? "-mt-10" : ""}`}>
             {/* Poster */}
-            {detail.poster_path && (
-              <div className="shrink-0 mx-auto sm:mx-0">
-                <div className="relative w-36 sm:w-44 aspect-[2/3] rounded-xl overflow-hidden shadow-xl">
+            <div className="shrink-0 mx-auto sm:mx-0">
+              <div className="relative w-36 sm:w-44 aspect-[2/3] rounded-xl overflow-hidden shadow-xl bg-[#2a2a2a]">
+                {detail.poster_path ? (
                   <Image
                     src={`${POSTER_BASE}${detail.poster_path}`}
                     alt={detail.title}
                     fill
                     className="object-cover"
                   />
-                </div>
+                ) : (
+                  <div className="flex h-full flex-col items-center justify-center gap-2 px-4 text-center">
+                    <svg className="w-8 h-8 text-white/10 shrink-0" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.375 19.5h17.25m-17.25 0a1.125 1.125 0 0 1-1.125-1.125M3.375 19.5h1.5C5.496 19.5 6 18.996 6 18.375m-3.75.125V6.375A1.125 1.125 0 0 1 3.375 5.25h1.5C5.496 5.25 6 5.754 6 6.375m0 12V6.375m0 0a1.125 1.125 0 0 1 1.125-1.125h9.75a1.125 1.125 0 0 1 1.125 1.125M6 6.375v12m12-12v12m0-12a1.125 1.125 0 0 1 1.125 1.125v11.25A1.125 1.125 0 0 1 18 19.5h-1.5" />
+                    </svg>
+                    <p className="text-white/30 text-xs">No poster</p>
+                  </div>
+                )}
               </div>
-            )}
+            </div>
 
             {/* Details */}
             <div className="flex flex-col gap-3 flex-1">
