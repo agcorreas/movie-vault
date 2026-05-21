@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { fetchMovieDetail, fetchExternalIds } from "@/lib/tmdb";
 import { fetchRatings } from "@/lib/omdb";
-import { scrapeLetterboxdRating, scrapeRTRating } from "@/lib/scrape";
+import { scrapeLetterboxdRating, scrapeRTRating, scrapeIMDbRating } from "@/lib/scrape";
 import { fetchWikidataIds } from "@/lib/wikidata";
 
 function toSlug(title: string, separator: string) {
@@ -48,7 +48,9 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
         ? await scrapeLetterboxdRating(wikidataIds.lbId)
         : null);
 
-    // RT scrape only as last resort (OMDB missed it), uses Wikidata slug when available
+    // Fallback scrapes when OMDB doesn't have the data yet (e.g. very new films)
+    const imdbRating = ratings.imdbRating ??
+      (detail.imdb_id ? await scrapeIMDbRating(detail.imdb_id) : null);
     const rtRating = ratings.rtRating ?? (await scrapeRTRating(rtId));
 
     const imdbLink = detail.imdb_id ? `https://www.imdb.com/title/${detail.imdb_id}/` : null;
@@ -59,7 +61,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 
     return NextResponse.json({
       ...detail,
-      imdbRating: ratings.imdbRating,
+      imdbRating,
       rtRating,
       lbRating,
       imdbLink,

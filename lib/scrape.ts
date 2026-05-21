@@ -36,6 +36,23 @@ export async function scrapeLetterboxdRating(slug: string): Promise<string | nul
   }
 }
 
+export async function scrapeIMDbRating(imdbId: string): Promise<string | null> {
+  try {
+    const res = await fetch(`https://www.imdb.com/title/${imdbId}/`, {
+      headers: HEADERS,
+      next: { revalidate: 86400 },
+    });
+    if (!res.ok) return null;
+    const html = await res.text();
+    const data = extractJsonLd(html);
+    const rating = data?.aggregateRating as { ratingValue?: number } | undefined;
+    if (rating?.ratingValue != null) return parseFloat(String(rating.ratingValue)).toFixed(1);
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 export async function scrapeRTRating(slug: string): Promise<string | null> {
   // Wikidata rtId already includes the "m/" prefix; title slugs do not.
   const path = slug.startsWith("m/") ? slug : `m/${slug}`;
