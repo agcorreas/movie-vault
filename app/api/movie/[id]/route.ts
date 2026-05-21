@@ -15,32 +15,40 @@ function toSlug(title: string, separator: string) {
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   try {
+    // Round 1: both TMDB calls in parallel
     const [detail, externalIds] = await Promise.all([
       fetchMovieDetail(Number(id)),
       fetchExternalIds(Number(id)),
     ]);
 
-    // Get canonical RT/LB IDs from Wikidata; fall back to title slugs
-    const wikidataIds = externalIds.wikidata_id
-      ? await fetchWikidataIds(externalIds.wikidata_id)
-      : { rtId: null, lbId: null };
+    const titleRtSlug = toSlug(detail.title, "_");
+    const titleLbSlug = toSlug(detail.title, "-");
 
-    const rtSlug = wikidataIds.rtId ?? toSlug(detail.title, "_");
-    const lbSlug = wikidataIds.lbId ?? toSlug(detail.title, "-");
-
-    const [ratings, lbRating] = await Promise.all([
-      detail.imdb_id ? fetchRatings(detail.imdb_id) : Promise.resolve({ imdbRating: null, rtRating: null }),
-      scrapeLetterboxdRating(lbSlug),
+    // Round 2: Wikidata, OMDB, and Letterboxd scrape all in parallel
+    // Letterboxd scrape uses the title slug — good enough for fetching the rating;
+    // Wikidata gives us the canonical slug for the link URL.
+    const [ratings, lbRating, wikidataIds] = await Promise.all([
+      detail.imdb_id
+        ? fetchRatings(detail.imdb_id)
+        : Promise.resolve({ imdbRating: null, rtRating: null }),
+      scrapeLetterboxdRating(titleLbSlug),
+      externalIds.wikidata_id
+        ? fetchWikidataIds(externalIds.wikidata_id)
+        : Promise.resolve({ rtId: null, lbId: null }),
     ]);
 
-    const rtRating = ratings.rtRating ?? (await scrapeRTRating(rtSlug));
+    // RT scrape only as last resort (OMDB missed it)
+    const rtRating = ratings.rtRating ?? (await scrapeRTRating(wikidataIds.rtId ?? titleRtSlug));
+
+    // Links use Wikidata canonical IDs when available, title slugs as fallback
+    const rtId = wikidataIds.rtId ?? titleRtSlug;
+    const lbId = wikidataIds.lbId ?? titleLbSlug;
 
     const imdbLink = detail.imdb_id ? `https://www.imdb.com/title/${detail.imdb_id}/` : null;
-    // RT IDs from Wikidata already include the "m/" prefix; slugs don't
     const rtLink = wikidataIds.rtId
-      ? `https://www.rottentomatoes.com/${rtSlug}`
-      : `https://www.rottentomatoes.com/m/${rtSlug}`;
-    const lbLink = `https://letterboxd.com/film/${lbSlug}/`;
+      ? `https://www.rottentomatoes.com/${rtId}`
+      : `https://www.rottentomatoes.com/m/${rtId}`;
+    const lbLink = `https://letterboxd.com/film/${lbId}/`;
 
     return NextResponse.json({
       ...detail,

@@ -1,5 +1,6 @@
 "use client";
 import Image from "next/image";
+import { useRef } from "react";
 import { POSTER_BASE } from "@/lib/tmdb";
 
 interface Props {
@@ -10,13 +11,26 @@ interface Props {
   onClick: () => void;
 }
 
-export default function MovieCard({ title, posterPath, releaseDate, onClick }: Props) {
+export default function MovieCard({ id, title, posterPath, releaseDate, onClick }: Props) {
   const year = releaseDate?.slice(0, 4) ?? "";
   const src = posterPath ? `${POSTER_BASE}${posterPath}` : null;
+  const prefetchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleMouseEnter = () => {
+    prefetchTimer.current = setTimeout(() => {
+      fetch(`/api/movie/${id}`);
+    }, 150);
+  };
+
+  const handleMouseLeave = () => {
+    if (prefetchTimer.current) clearTimeout(prefetchTimer.current);
+  };
 
   return (
     <button
       onClick={onClick}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
       className="group relative aspect-[2/3] w-full overflow-hidden rounded-xl bg-[#1c1c1e] cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(0,0,0,0.6)]"
     >
       {src ? (
