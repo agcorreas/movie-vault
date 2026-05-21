@@ -14,6 +14,7 @@ interface MovieDetail {
   release_date: string;
   runtime: number;
   genres: { id: number; name: string }[];
+  vote_average: number;
   imdbRating: string | null;
   rtRating: string | null;
   lbRating: string | null;
@@ -45,6 +46,13 @@ const LetterboxdIcon = () => (
   <svg viewBox="0 0 24 24" className="w-5 h-5">
     <rect width="24" height="24" rx="4" fill="#00B020"/>
     <text x="3" y="17" fontSize="9" fontWeight="bold" fill="white" fontFamily="Arial">LBD</text>
+  </svg>
+);
+
+const TmdbIcon = () => (
+  <svg viewBox="0 0 24 24" className="w-5 h-5">
+    <rect width="24" height="24" rx="4" fill="#01B4E4"/>
+    <text x="1" y="17" fontSize="8" fontWeight="bold" fill="white" fontFamily="Arial">TMDB</text>
   </svg>
 );
 
@@ -178,6 +186,13 @@ export default function MovieModal({ movieId, onClose }: Props) {
                   link={detail.lbLink}
                   color="bg-green-600/20"
                   icon={<LetterboxdIcon />}
+                />
+                <RatingBadge
+                  label="TMDB"
+                  score={detail.vote_average ? `${detail.vote_average.toFixed(1)} / 10` : null}
+                  link={`https://www.themoviedb.org/movie/${detail.id}`}
+                  color="bg-sky-500/20"
+                  icon={<TmdbIcon />}
                 />
               </div>
             </div>
