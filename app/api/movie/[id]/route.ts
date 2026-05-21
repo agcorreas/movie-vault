@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { fetchMovieDetail } from "@/lib/tmdb";
+import { fetchMovieDetail, fetchExternalIds } from "@/lib/tmdb";
 import { fetchRatings } from "@/lib/omdb";
 import { scrapeLetterboxdRating, scrapeRTRating } from "@/lib/scrape";
+import { fetchWikidataIds } from "@/lib/wikidata";
 
 function toSlug(title: string, separator: string) {
   return title
@@ -14,21 +15,31 @@ function toSlug(title: string, separator: string) {
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   try {
-    const detail = await fetchMovieDetail(Number(id));
+    const [detail, externalIds] = await Promise.all([
+      fetchMovieDetail(Number(id)),
+      fetchExternalIds(Number(id)),
+    ]);
 
-    const rtSlug = toSlug(detail.title, "_");
-    const lbSlug = toSlug(detail.title, "-");
+    // Get canonical RT/LB IDs from Wikidata; fall back to title slugs
+    const wikidataIds = externalIds.wikidata_id
+      ? await fetchWikidataIds(externalIds.wikidata_id)
+      : { rtId: null, lbId: null };
+
+    const rtSlug = wikidataIds.rtId ?? toSlug(detail.title, "_");
+    const lbSlug = wikidataIds.lbId ?? toSlug(detail.title, "-");
 
     const [ratings, lbRating] = await Promise.all([
       detail.imdb_id ? fetchRatings(detail.imdb_id) : Promise.resolve({ imdbRating: null, rtRating: null }),
       scrapeLetterboxdRating(lbSlug),
     ]);
 
-    // Use scraped RT score only when OMDB doesn't have it
     const rtRating = ratings.rtRating ?? (await scrapeRTRating(rtSlug));
 
     const imdbLink = detail.imdb_id ? `https://www.imdb.com/title/${detail.imdb_id}/` : null;
-    const rtLink = `https://www.rottentomatoes.com/m/${rtSlug}`;
+    // RT IDs from Wikidata already include the "m/" prefix; slugs don't
+    const rtLink = wikidataIds.rtId
+      ? `https://www.rottentomatoes.com/${rtSlug}`
+      : `https://www.rottentomatoes.com/m/${rtSlug}`;
     const lbLink = `https://letterboxd.com/film/${lbSlug}/`;
 
     return NextResponse.json({

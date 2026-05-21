@@ -68,3 +68,10 @@ export async function fetchMovieDetail(id: number): Promise<TmdbMovieDetail> {
   if (!res.ok) throw new Error("TMDB detail fetch failed");
   return res.json();
 }
+
+export async function fetchExternalIds(id: number): Promise<{ wikidata_id: string | null }> {
+  const res = await fetch(url(`/movie/${id}/external_ids`), { next: { revalidate: 86400 } });
+  if (!res.ok) return { wikidata_id: null };
+  const data = await res.json();
+  return { wikidata_id: data.wikidata_id ?? null };
+}
