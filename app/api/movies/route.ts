@@ -5,9 +5,10 @@ export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
   const page = Number(searchParams.get("page") ?? 1);
   const query = searchParams.get("query") ?? "";
+  const genreId = searchParams.get("genreId") ? Number(searchParams.get("genreId")) : null;
 
   try {
-    const data = await fetchMovies(page, query);
+    const data = await fetchMovies(page, query, genreId);
     return NextResponse.json(data);
   } catch {
     return NextResponse.json({ error: "Failed to fetch movies" }, { status: 500 });

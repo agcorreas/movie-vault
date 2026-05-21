@@ -3,11 +3,17 @@ import { useEffect, useRef, useState } from "react";
 
 interface Props {
   onSearch: (query: string) => void;
+  currentQuery: string;
 }
 
-export default function SearchBar({ onSearch }: Props) {
+export default function SearchBar({ onSearch, currentQuery }: Props) {
   const [value, setValue] = useState("");
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Sync input when parent clears the query (e.g. genre selected)
+  useEffect(() => {
+    if (currentQuery === "") setValue("");
+  }, [currentQuery]);
 
   useEffect(() => {
     if (timer.current) clearTimeout(timer.current);
