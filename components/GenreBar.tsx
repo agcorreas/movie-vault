@@ -26,7 +26,7 @@ export default function GenreBar({ selected, onSelect }: Props) {
     activeRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
   }, [selected]);
 
-  const pills = [{ id: null, name: "Latest" }, ...genres];
+  const pills = [{ id: null, name: "Popular" }, ...genres];
 
   return (
     <div className="relative">

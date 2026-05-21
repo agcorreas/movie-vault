@@ -49,7 +49,7 @@ export async function fetchMovies(
   } else {
     const today = new Date().toISOString().slice(0, 10);
     const params: Record<string, string> = {
-      sort_by: "primary_release_date.desc",
+      sort_by: "popularity.desc",
       "primary_release_date.lte": today,
       page: String(page),
       include_adult: "false",
