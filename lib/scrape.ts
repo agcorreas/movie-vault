@@ -37,8 +37,10 @@ export async function scrapeLetterboxdRating(slug: string): Promise<string | nul
 }
 
 export async function scrapeRTRating(slug: string): Promise<string | null> {
+  // Wikidata rtId already includes the "m/" prefix; title slugs do not.
+  const path = slug.startsWith("m/") ? slug : `m/${slug}`;
   try {
-    const res = await fetch(`https://www.rottentomatoes.com/m/${slug}`, {
+    const res = await fetch(`https://www.rottentomatoes.com/${path}`, {
       headers: HEADERS,
       next: { revalidate: 86400 },
     });
