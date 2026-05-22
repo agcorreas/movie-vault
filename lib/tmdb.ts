@@ -93,7 +93,7 @@ export async function fetchDirectorMovies(personId: number): Promise<TmdbMovie[]
   const data = await res.json();
   const directed = (data.crew as (TmdbMovie & { job: string })[])
     .filter((c) => c.job === "Director" && c.release_date)
-    .sort((a, b) => (b.release_date > a.release_date ? 1 : -1));
+    .sort((a, b) => (b.release_date < a.release_date ? 1 : -1));
   // deduplicate by id (a film can appear multiple times in credits)
   const seen = new Set<number>();
   return directed.filter((m) => (seen.has(m.id) ? false : seen.add(m.id) && true));
