@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import SearchBar from "@/components/SearchBar";
 import MovieGrid from "@/components/MovieGrid";
 import GenreBar from "@/components/GenreBar";
+import AuthButton from "@/components/AuthButton";
 
 interface Movie {
   id: number;
@@ -66,6 +67,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center gap-4 px-4 py-4">
           <h1 className="text-xl font-bold tracking-tight shrink-0">MovieVault</h1>
           <SearchBar onSearch={handleSearch} currentQuery={query} />
+          <AuthButton />
         </div>
         <div className="max-w-7xl mx-auto">
           <GenreBar selected={genreId} onSelect={handleGenre} />

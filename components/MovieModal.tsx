@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { POSTER_BASE, BACKDROP_BASE } from "@/lib/tmdb";
 import RatingBadge from "./RatingBadge";
+import { createClient } from "@/lib/supabase/client";
 
 interface MovieDetail {
   id: number;
@@ -59,6 +60,9 @@ const TmdbIcon = () => (
 export default function MovieModal({ movieId, onClose }: Props) {
   const [detail, setDetail] = useState<MovieDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [watchlisted, setWatchlisted] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [watchlistId, setWatchlistId] = useState<string | null>(null);
 
   useEffect(() => {
     setLoading(true);
@@ -67,6 +71,44 @@ export default function MovieModal({ movieId, onClose }: Props) {
       .then(setDetail)
       .finally(() => setLoading(false));
   }, [movieId]);
+
+  useEffect(() => {
+    const supabase = createClient();
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      setUserId(user.id);
+      const { data } = await supabase
+        .from("watchlist")
+        .select("id")
+        .eq("movie_id", movieId)
+        .maybeSingle();
+      if (data) {
+        setWatchlisted(true);
+        setWatchlistId(data.id);
+      }
+    })();
+  }, [movieId]);
+
+  async function toggleWatchlist() {
+    if (!userId) return;
+    const supabase = createClient();
+    if (watchlisted && watchlistId) {
+      await supabase.from("watchlist").delete().eq("id", watchlistId);
+      setWatchlisted(false);
+      setWatchlistId(null);
+    } else if (detail) {
+      const { data } = await supabase
+        .from("watchlist")
+        .insert({ user_id: userId, movie_id: movieId, title: detail.title, poster_path: detail.poster_path })
+        .select("id")
+        .single();
+      if (data) {
+        setWatchlisted(true);
+        setWatchlistId(data.id);
+      }
+    }
+  }
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
@@ -101,15 +143,34 @@ export default function MovieModal({ movieId, onClose }: Props) {
           </div>
         )}
 
-        {/* Close button */}
-        <button
-          onClick={onClose}
-          className="absolute top-3 right-3 z-10 rounded-full bg-black/50 p-1.5 text-white hover:bg-black/80 transition"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
+        {/* Action buttons */}
+        <div className="absolute top-3 right-3 z-10 flex items-center gap-2">
+          {userId && (
+            <button
+              onClick={toggleWatchlist}
+              title={watchlisted ? "Remove from watchlist" : "Add to watchlist"}
+              className="rounded-full bg-black/50 p-1.5 text-white hover:bg-black/80 transition cursor-pointer"
+            >
+              <svg
+                className="w-5 h-5"
+                fill={watchlisted ? "currentColor" : "none"}
+                stroke="currentColor"
+                strokeWidth={2}
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
+              </svg>
+            </button>
+          )}
+          <button
+            onClick={onClose}
+            className="rounded-full bg-black/50 p-1.5 text-white hover:bg-black/80 transition"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
 
         {loading ? (
           <div className="flex items-center justify-center h-64 text-gray-400">Loading…</div>
