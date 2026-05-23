@@ -1,8 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
-import { POSTER_BASE } from "@/lib/tmdb";
+import MovieCard from "@/components/MovieCard";
 import MovieModal from "@/components/MovieModal";
 import Link from "next/link";
 import AuthButton from "@/components/AuthButton";
@@ -93,32 +92,17 @@ export default function WatchlistPage() {
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
             {items.map((item) => (
-              <div key={item.id} className="group relative">
-                <button
+              <div key={item.id} className="relative group/card">
+                <MovieCard
+                  id={item.movie_id}
+                  title={item.title}
+                  posterPath={item.poster_path}
+                  releaseDate=""
                   onClick={() => setSelectedId(item.movie_id)}
-                  className="w-full text-left cursor-pointer"
-                >
-                  <div className="relative aspect-[2/3] rounded-xl overflow-hidden bg-[#2a2a2a]">
-                    {item.poster_path ? (
-                      <Image
-                        src={`${POSTER_BASE}${item.poster_path}`}
-                        alt={item.title}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                    ) : (
-                      <div className="flex h-full items-center justify-center text-white/20 text-xs px-3 text-center">
-                        {item.title}
-                      </div>
-                    )}
-                  </div>
-                  <p className="mt-2 text-sm text-white/80 leading-tight line-clamp-2">
-                    {item.title}
-                  </p>
-                </button>
+                />
                 <button
                   onClick={() => remove(item.id)}
-                  className="absolute top-2 right-2 rounded-full bg-black/60 p-1.5 opacity-0 group-hover:opacity-100 transition hover:bg-black/80 cursor-pointer"
+                  className="absolute top-2 right-2 rounded-full bg-black/60 p-1.5 opacity-0 group-hover/card:opacity-100 transition hover:bg-black/80 cursor-pointer"
                   title="Remove from watchlist"
                 >
                   <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
