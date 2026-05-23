@@ -100,7 +100,7 @@ export default function MovieModal({ movieId, onClose }: Props) {
     } else if (detail) {
       const { data } = await supabase
         .from("watchlist")
-        .insert({ user_id: userId, movie_id: movieId, title: detail.title, poster_path: detail.poster_path })
+        .insert({ user_id: userId, movie_id: movieId, title: detail.title, poster_path: detail.poster_path, genres: detail.genres })
         .select("id")
         .single();
       if (data) {

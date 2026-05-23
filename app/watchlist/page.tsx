@@ -1,16 +1,22 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import MovieCard from "@/components/MovieCard";
 import MovieModal from "@/components/MovieModal";
 import Link from "next/link";
 import AuthButton from "@/components/AuthButton";
 
+interface Genre {
+  id: number;
+  name: string;
+}
+
 interface WatchlistItem {
   id: string;
   movie_id: number;
   title: string;
   poster_path: string | null;
+  genres: Genre[];
 }
 
 export default function WatchlistPage() {
@@ -18,6 +24,7 @@ export default function WatchlistPage() {
   const [loading, setLoading] = useState(true);
   const [notLoggedIn, setNotLoggedIn] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [activeGenre, setActiveGenre] = useState<number | null>(null);
 
   useEffect(() => {
     const supabase = createClient();
@@ -30,9 +37,9 @@ export default function WatchlistPage() {
       }
       const { data } = await supabase
         .from("watchlist")
-        .select("id, movie_id, title, poster_path")
+        .select("id, movie_id, title, poster_path, genres")
         .order("added_at", { ascending: false });
-      setItems(data ?? []);
+      setItems((data ?? []).map((row) => ({ ...row, genres: row.genres ?? [] })));
       setLoading(false);
     })();
   }, []);
@@ -42,6 +49,24 @@ export default function WatchlistPage() {
     await supabase.from("watchlist").delete().eq("id", id);
     setItems((prev) => prev.filter((i) => i.id !== id));
   }
+
+  const genres = useMemo(() => {
+    const map = new Map<number, string>();
+    items.forEach((item) =>
+      item.genres.forEach((g) => map.set(g.id, g.name))
+    );
+    return Array.from(map.entries())
+      .map(([id, name]) => ({ id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [items]);
+
+  const filtered = useMemo(
+    () =>
+      activeGenre === null
+        ? items
+        : items.filter((item) => item.genres.some((g) => g.id === activeGenre)),
+    [items, activeGenre]
+  );
 
   if (loading) {
     return (
@@ -76,6 +101,34 @@ export default function WatchlistPage() {
           <h1 className="text-white/60 text-sm font-medium flex-1">Watchlist</h1>
           <AuthButton />
         </div>
+
+        {genres.length > 0 && (
+          <div className="max-w-7xl mx-auto px-4 pb-3 flex gap-2 overflow-x-auto scrollbar-none">
+            <button
+              onClick={() => setActiveGenre(null)}
+              className={`shrink-0 rounded-full px-3.5 py-1 text-xs font-medium transition cursor-pointer ${
+                activeGenre === null
+                  ? "bg-white text-black"
+                  : "bg-white/10 text-white/60 hover:bg-white/15 hover:text-white"
+              }`}
+            >
+              All
+            </button>
+            {genres.map((g) => (
+              <button
+                key={g.id}
+                onClick={() => setActiveGenre(g.id === activeGenre ? null : g.id)}
+                className={`shrink-0 rounded-full px-3.5 py-1 text-xs font-medium transition cursor-pointer ${
+                  activeGenre === g.id
+                    ? "bg-white text-black"
+                    : "bg-white/10 text-white/60 hover:bg-white/15 hover:text-white"
+                }`}
+              >
+                {g.name}
+              </button>
+            ))}
+          </div>
+        )}
       </header>
 
       <section className="max-w-7xl mx-auto px-4 py-8">
@@ -89,9 +142,11 @@ export default function WatchlistPage() {
               Browse movies
             </Link>
           </div>
+        ) : filtered.length === 0 ? (
+          <p className="text-center text-white/30 py-24 text-sm">No movies in this genre.</p>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-            {items.map((item) => (
+            {filtered.map((item) => (
               <div key={item.id} className="relative group/card">
                 <MovieCard
                   id={item.movie_id}
