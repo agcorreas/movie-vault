@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { POSTER_BASE } from "@/lib/tmdb";
 import MovieModal from "@/components/MovieModal";
 import Link from "next/link";
+import AuthButton from "@/components/AuthButton";
 
 interface WatchlistItem {
   id: string;
@@ -69,11 +70,12 @@ export default function WatchlistPage() {
     <main className="min-h-screen bg-[#0f0f0f] text-white">
       <header className="sticky top-0 z-40 bg-[#0f0f0f]/90 backdrop-blur border-b border-white/5">
         <div className="max-w-7xl mx-auto flex items-center gap-4 px-4 py-4">
-          <Link href="/" className="text-xl font-bold tracking-tight">
+          <Link href="/" className="text-xl font-bold tracking-tight shrink-0">
             MovieVault
           </Link>
           <span className="text-white/20">/</span>
-          <h1 className="text-white/60 text-sm font-medium">Watchlist</h1>
+          <h1 className="text-white/60 text-sm font-medium flex-1">Watchlist</h1>
+          <AuthButton />
         </div>
       </header>
 
