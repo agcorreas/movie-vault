@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import SearchBar from "@/components/SearchBar";
 import MovieGrid from "@/components/MovieGrid";
 import GenreBar from "@/components/GenreBar";
@@ -69,7 +70,7 @@ export default function HomeContent({ initialQuery = "" }: Props) {
     <main className="min-h-screen bg-[#0f0f0f] text-white">
       <header className="sticky top-0 z-40 bg-[#0f0f0f]/90 backdrop-blur border-b border-white/5">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center gap-4 px-4 py-4">
-          <h1 className="text-xl font-bold tracking-tight shrink-0">MovieVault</h1>
+          <Link href="/" className="text-xl font-bold tracking-tight shrink-0">MovieVault</Link>
           <SearchBar onSearch={handleSearch} currentQuery={query} />
           <AuthButton />
         </div>
