@@ -6,5 +6,5 @@ export default async function Page({
   searchParams: Promise<{ q?: string }>;
 }) {
   const { q = "" } = await searchParams;
-  return <HomeContent initialQuery={q} />;
+  return <HomeContent key={q} initialQuery={q} />;
 }
