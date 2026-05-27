@@ -106,6 +106,33 @@ export async function fetchExternalIds(id: number): Promise<{ wikidata_id: strin
   return { wikidata_id: data.wikidata_id ?? null };
 }
 
+export interface WatchProvider {
+  provider_id: number;
+  provider_name: string;
+  logo_path: string;
+}
+
+export interface WatchProviders {
+  flatrate: WatchProvider[];
+  rent: WatchProvider[];
+  buy: WatchProvider[];
+  link: string | null;
+}
+
+export async function fetchWatchProviders(id: number, region = "AR"): Promise<WatchProviders> {
+  const res = await fetch(url(`/movie/${id}/watch/providers`), { next: { revalidate: 3600 } });
+  if (!res.ok) return { flatrate: [], rent: [], buy: [], link: null };
+  const data = await res.json();
+  const r = data.results?.[region];
+  if (!r) return { flatrate: [], rent: [], buy: [], link: null };
+  return {
+    flatrate: r.flatrate ?? [],
+    rent: r.rent ?? [],
+    buy: r.buy ?? [],
+    link: r.link ?? null,
+  };
+}
+
 export async function fetchMovieCredits(id: number): Promise<{ director: string | null }> {
   const res = await fetch(url(`/movie/${id}/credits`), { next: { revalidate: 3600 } });
   if (!res.ok) return { director: null };

@@ -19,6 +19,12 @@ interface MovieDetail {
   vote_average: number;
   director: string | null;
   trailerKey: string | null;
+  watchProviders: {
+    flatrate: { provider_id: number; provider_name: string; logo_path: string }[];
+    rent: { provider_id: number; provider_name: string; logo_path: string }[];
+    buy: { provider_id: number; provider_name: string; logo_path: string }[];
+    link: string | null;
+  };
   imdbRating: string | null;
   rtRating: string | null;
   lbRating: string | null;
@@ -54,6 +60,46 @@ const TmdbIcon = () => (
     <text x="1" y="17" fontSize="8" fontWeight="bold" fill="white" fontFamily="Arial">TMDB</text>
   </svg>
 );
+
+const LOGO_BASE = "https://image.tmdb.org/t/p/w45";
+
+function ProviderRow({
+  label,
+  providers,
+  link,
+}: {
+  label: string;
+  providers: { provider_id: number; provider_name: string; logo_path: string }[];
+  link: string | null;
+}) {
+  const inner = (
+    <div className="flex items-center gap-3">
+      <span className="text-xs text-white/40 w-10 shrink-0">{label}</span>
+      <div className="flex flex-wrap gap-2">
+        {providers.map((p) => (
+          <div key={p.provider_id} className="flex items-center gap-1.5 bg-white/8 rounded-lg px-2.5 py-1.5" title={p.provider_name}>
+            <img
+              src={`${LOGO_BASE}${p.logo_path}`}
+              alt={p.provider_name}
+              width={20}
+              height={20}
+              className="rounded-sm w-5 h-5 object-cover"
+            />
+            <span className="text-xs text-white/80 font-medium">{p.provider_name}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  return link ? (
+    <a href={link} target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition">
+      {inner}
+    </a>
+  ) : (
+    inner
+  );
+}
 
 export default function MovieDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -266,6 +312,25 @@ export default function MovieDetailPage({ params }: { params: Promise<{ id: stri
                 </div>
               </div>
             </div>
+
+            {/* Where to Watch */}
+            {(detail.watchProviders.flatrate.length > 0 || detail.watchProviders.rent.length > 0 || detail.watchProviders.buy.length > 0) && (
+              <div className="mt-10">
+                <h2 className="text-lg font-semibold mb-4 text-white/80">Where to Watch</h2>
+                <div className="flex flex-col gap-4">
+                  {detail.watchProviders.flatrate.length > 0 && (
+                    <ProviderRow label="Stream" providers={detail.watchProviders.flatrate} link={detail.watchProviders.link} />
+                  )}
+                  {detail.watchProviders.rent.length > 0 && (
+                    <ProviderRow label="Rent" providers={detail.watchProviders.rent} link={detail.watchProviders.link} />
+                  )}
+                  {detail.watchProviders.buy.length > 0 && (
+                    <ProviderRow label="Buy" providers={detail.watchProviders.buy} link={detail.watchProviders.link} />
+                  )}
+                </div>
+                <p className="text-xs text-white/25 mt-3">Argentina availability via JustWatch</p>
+              </div>
+            )}
 
             {/* Trailer */}
             {detail.trailerKey && (
