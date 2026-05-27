@@ -210,7 +210,13 @@ export default function MovieDetailPage({ params }: { params: Promise<{ id: stri
 
                 {detail.director && (
                   <p className="text-sm text-white/50">
-                    Directed by <span className="text-white font-medium">{detail.director}</span>
+                    Directed by{" "}
+                    <Link
+                      href={`/?q=${encodeURIComponent(detail.director)}`}
+                      className="text-white font-medium hover:underline underline-offset-2"
+                    >
+                      {detail.director}
+                    </Link>
                   </p>
                 )}
 

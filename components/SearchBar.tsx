@@ -7,7 +7,7 @@ interface Props {
 }
 
 export default function SearchBar({ onSearch, currentQuery }: Props) {
-  const [value, setValue] = useState("");
+  const [value, setValue] = useState(currentQuery);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Sync input when parent clears the query (e.g. genre selected)
