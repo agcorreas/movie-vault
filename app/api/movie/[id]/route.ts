@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { fetchMovieDetail, fetchExternalIds } from "@/lib/tmdb";
+import { fetchMovieDetail, fetchExternalIds, fetchMovieCredits, fetchMovieVideos } from "@/lib/tmdb";
 import { fetchRatings } from "@/lib/omdb";
 import { scrapeLetterboxdRating, scrapeRTRating } from "@/lib/scrape";
 import { fetchWikidataIds } from "@/lib/wikidata";
@@ -15,10 +15,12 @@ function toSlug(title: string, separator: string) {
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   try {
-    // Round 1: both TMDB calls in parallel
-    const [detail, externalIds] = await Promise.all([
+    // Round 1: all TMDB calls in parallel
+    const [detail, externalIds, credits, videos] = await Promise.all([
       fetchMovieDetail(Number(id)),
       fetchExternalIds(Number(id)),
+      fetchMovieCredits(Number(id)),
+      fetchMovieVideos(Number(id)),
     ]);
 
     const titleRtSlug = toSlug(detail.title, "_");
@@ -59,6 +61,8 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 
     return NextResponse.json({
       ...detail,
+      director: credits.director,
+      trailerKey: videos.trailerKey,
       imdbRating,
       rtRating,
       lbRating,

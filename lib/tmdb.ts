@@ -105,3 +105,21 @@ export async function fetchExternalIds(id: number): Promise<{ wikidata_id: strin
   const data = await res.json();
   return { wikidata_id: data.wikidata_id ?? null };
 }
+
+export async function fetchMovieCredits(id: number): Promise<{ director: string | null }> {
+  const res = await fetch(url(`/movie/${id}/credits`), { next: { revalidate: 3600 } });
+  if (!res.ok) return { director: null };
+  const data = await res.json();
+  const director = (data.crew as { job: string; name: string }[])
+    ?.find((c) => c.job === "Director")?.name ?? null;
+  return { director };
+}
+
+export async function fetchMovieVideos(id: number): Promise<{ trailerKey: string | null }> {
+  const res = await fetch(url(`/movie/${id}/videos`), { next: { revalidate: 3600 } });
+  if (!res.ok) return { trailerKey: null };
+  const data = await res.json();
+  const trailer = (data.results as { type: string; site: string; key: string }[])
+    ?.find((v) => v.type === "Trailer" && v.site === "YouTube");
+  return { trailerKey: trailer?.key ?? null };
+}

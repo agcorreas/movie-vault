@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { POSTER_BASE, BACKDROP_BASE } from "@/lib/tmdb";
 import RatingBadge from "./RatingBadge";
 import { createClient } from "@/lib/supabase/client";
@@ -22,6 +23,8 @@ interface MovieDetail {
   imdbLink: string | null;
   rtLink: string | null;
   lbLink: string | null;
+  director: string | null;
+  trailerKey: string | null;
 }
 
 interface Props {
@@ -256,6 +259,17 @@ export default function MovieModal({ movieId, onClose }: Props) {
                   icon={<TmdbIcon />}
                 />
               </div>
+
+              <Link
+                href={`/movie/${detail.id}`}
+                onClick={onClose}
+                className="inline-flex items-center gap-1.5 text-sm text-white/40 hover:text-white transition mt-1 self-start"
+              >
+                See full details
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </Link>
             </div>
           </div>
         )}
