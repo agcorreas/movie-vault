@@ -127,23 +127,6 @@ export default function MovieDetailPage({ params }: { params: Promise<{ id: stri
           </Link>
           <span className="text-white/20 shrink-0">/</span>
           <span className="text-white/60 text-sm truncate flex-1">{detail?.title ?? "…"}</span>
-          {userId && (
-            <button
-              onClick={toggleWatchlist}
-              title={watchlisted ? "Remove from watchlist" : "Add to watchlist"}
-              className="shrink-0 rounded-full bg-white/10 p-2 text-white hover:bg-white/20 transition cursor-pointer"
-            >
-              <svg
-                className="w-4 h-4"
-                fill={watchlisted ? "currentColor" : "none"}
-                stroke="currentColor"
-                strokeWidth={2}
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
-              </svg>
-            </button>
-          )}
         </div>
       </header>
 
@@ -202,6 +185,28 @@ export default function MovieDetailPage({ params }: { params: Promise<{ id: stri
                     <p className="text-gray-400 italic text-sm mt-1">"{detail.tagline}"</p>
                   )}
                 </div>
+
+                {userId && (
+                  <button
+                    onClick={toggleWatchlist}
+                    className={`self-start flex items-center gap-2 rounded-full px-5 py-2 text-sm font-medium transition cursor-pointer ${
+                      watchlisted
+                        ? "bg-white text-black hover:bg-white/90"
+                        : "bg-white/10 text-white hover:bg-white/20"
+                    }`}
+                  >
+                    <svg
+                      className="w-4 h-4 shrink-0"
+                      fill={watchlisted ? "currentColor" : "none"}
+                      stroke="currentColor"
+                      strokeWidth={2}
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
+                    </svg>
+                    {watchlisted ? "In Watchlist" : "Add to Watchlist"}
+                  </button>
+                )}
 
                 {detail.director && (
                   <p className="text-sm text-white/50">
