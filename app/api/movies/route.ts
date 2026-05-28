@@ -6,34 +6,30 @@ export async function GET(req: NextRequest) {
   const page = Number(searchParams.get("page") ?? 1);
   const query = searchParams.get("query") ?? "";
   const genreId = searchParams.get("genreId") ? Number(searchParams.get("genreId")) : null;
+  const mode = searchParams.get("mode") ?? "movie"; // "movie" | "director"
 
   try {
     if (query) {
-      // Run movie title search and director person search in parallel
-      const [movieData, director] = await Promise.all([
-        fetchMovies(page, query, null),
-        searchDirector(query),
-      ]);
-
-      // Prefer director results when a matching director is found
-      if (director) {
-        const movies = await fetchDirectorMovies(director.id);
-        // Paginate manually (director credits come back all at once)
-        const pageSize = 20;
-        const start = (page - 1) * pageSize;
-        const results = movies.slice(start, start + pageSize);
-        return NextResponse.json({
-          results,
-          total_pages: Math.ceil(movies.length / pageSize),
-          director_name: director.name,
-        });
+      if (mode === "director") {
+        const director = await searchDirector(query);
+        if (director) {
+          const movies = await fetchDirectorMovies(director.id);
+          const pageSize = 20;
+          const start = (page - 1) * pageSize;
+          return NextResponse.json({
+            results: movies.slice(start, start + pageSize),
+            total_pages: Math.ceil(movies.length / pageSize),
+            director_name: director.name,
+          });
+        }
+        return NextResponse.json({ results: [], total_pages: 1 });
       }
 
-      return NextResponse.json(movieData);
+      // mode === "movie": straight title search, no director detection
+      return NextResponse.json(await fetchMovies(page, query, null));
     }
 
-    const data = await fetchMovies(page, query, genreId);
-    return NextResponse.json(data);
+    return NextResponse.json(await fetchMovies(page, query, genreId));
   } catch {
     return NextResponse.json({ error: "Failed to fetch movies" }, { status: 500 });
   }

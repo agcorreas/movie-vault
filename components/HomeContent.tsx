@@ -19,6 +19,7 @@ interface Props {
 
 export default function HomeContent({ initialQuery = "" }: Props) {
   const [query, setQuery] = useState(initialQuery);
+  const [searchMode, setSearchMode] = useState<"movie" | "director">(initialQuery ? "director" : "movie");
   const [genreId, setGenreId] = useState<number | null>(null);
   const [page, setPage] = useState(1);
   const [movies, setMovies] = useState<Movie[]>([]);
@@ -27,11 +28,11 @@ export default function HomeContent({ initialQuery = "" }: Props) {
   const [error, setError] = useState(false);
   const [directorName, setDirectorName] = useState<string | null>(null);
 
-  const load = useCallback(async (q: string, gId: number | null, p: number, append: boolean) => {
+  const load = useCallback(async (q: string, gId: number | null, p: number, append: boolean, mode: "movie" | "director" = searchMode) => {
     setLoading(true);
     setError(false);
     try {
-      const params = new URLSearchParams({ page: String(p), query: q });
+      const params = new URLSearchParams({ page: String(p), query: q, mode });
       if (gId) params.set("genreId", String(gId));
       const res = await fetch(`/api/movies?${params}`);
       const data = await res.json();
@@ -43,13 +44,13 @@ export default function HomeContent({ initialQuery = "" }: Props) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [searchMode]);
 
   useEffect(() => {
     setPage(1);
     setMovies([]);
     load(query, genreId, 1, false);
-  }, [query, genreId, load]);
+  }, [query, genreId, searchMode, load]);
 
   const handleSearch = useCallback((q: string) => {
     setQuery(q);
@@ -63,7 +64,7 @@ export default function HomeContent({ initialQuery = "" }: Props) {
   const loadMore = () => {
     const next = page + 1;
     setPage(next);
-    load(query, genreId, next, true);
+    load(query, genreId, next, true, searchMode);
   };
 
   return (
@@ -72,6 +73,20 @@ export default function HomeContent({ initialQuery = "" }: Props) {
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center gap-4 px-4 py-4">
           <Link href="/" className="text-xl font-bold tracking-tight shrink-0">MovieVault</Link>
           <SearchBar onSearch={handleSearch} currentQuery={query} />
+          <div className="flex items-center shrink-0 rounded-full bg-white/10 p-0.5 text-xs font-medium">
+            <button
+              onClick={() => setSearchMode("movie")}
+              className={`rounded-full px-3.5 py-1.5 transition cursor-pointer ${searchMode === "movie" ? "bg-white text-black" : "text-white/60 hover:text-white"}`}
+            >
+              Movies
+            </button>
+            <button
+              onClick={() => setSearchMode("director")}
+              className={`rounded-full px-3.5 py-1.5 transition cursor-pointer ${searchMode === "director" ? "bg-white text-black" : "text-white/60 hover:text-white"}`}
+            >
+              Director
+            </button>
+          </div>
           <AuthButton />
         </div>
         <div className="max-w-7xl mx-auto">
