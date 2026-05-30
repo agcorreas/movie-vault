@@ -1,9 +1,15 @@
 "use client";
+import { use } from "react";
 import { useActionState } from "react";
 import { login } from "@/app/actions/auth";
 import Link from "next/link";
 
-export default function LoginPage() {
+export default function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ returnTo?: string }>;
+}) {
+  const { returnTo = "/" } = use(searchParams);
   const [state, action, pending] = useActionState(login, null);
 
   return (
@@ -15,6 +21,7 @@ export default function LoginPage() {
         <div className="bg-[#1a1a1a] rounded-2xl p-8">
           <h2 className="text-lg font-semibold text-white mb-6">Log in</h2>
           <form action={action} className="flex flex-col gap-4">
+            <input type="hidden" name="returnTo" value={returnTo} />
             <div className="flex flex-col gap-1.5">
               <label htmlFor="email" className="text-sm text-white/60">
                 Email

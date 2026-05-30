@@ -28,11 +28,15 @@ export async function login(
 ) {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
+  const returnTo = formData.get("returnTo") as string | null;
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) return { error: error.message };
-  redirect("/");
+
+  // Only redirect to internal paths to prevent open redirect
+  const destination = returnTo?.startsWith("/") ? returnTo : "/";
+  redirect(destination);
 }
 
 export async function logout() {
