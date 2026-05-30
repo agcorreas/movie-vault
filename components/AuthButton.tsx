@@ -1,13 +1,21 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { logout } from "@/app/actions/auth";
 
 export default function AuthButton() {
   const [username, setUsername] = useState<string | null>(null);
   const [loggedIn, setLoggedIn] = useState(false);
   const [loading, setLoading] = useState(true);
+  const pathname = usePathname();
+  const router = useRouter();
+
+  async function handleLogout() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    if (pathname === "/watchlist") router.push("/");
+  }
 
   useEffect(() => {
     const supabase = createClient();
@@ -60,14 +68,12 @@ export default function AuthButton() {
           {username}
         </span>
       )}
-      <form action={logout}>
-        <button
-          type="submit"
-          className="text-sm text-white/60 hover:text-white transition px-3 py-1.5 cursor-pointer"
-        >
-          Log out
-        </button>
-      </form>
+      <button
+        onClick={handleLogout}
+        className="text-sm text-white/60 hover:text-white transition px-3 py-1.5 cursor-pointer"
+      >
+        Log out
+      </button>
     </div>
   );
 }
