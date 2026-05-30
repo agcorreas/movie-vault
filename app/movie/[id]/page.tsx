@@ -120,6 +120,7 @@ export default function MovieDetailPage({ params }: { params: Promise<{ id: stri
 
   useEffect(() => {
     const supabase = createClient();
+
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
@@ -134,6 +135,15 @@ export default function MovieDetailPage({ params }: { params: Promise<{ id: stri
         setWatchlistId(data.id);
       }
     })();
+
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session?.user) {
+        setUserId(null);
+        setWatchlisted(false);
+        setWatchlistId(null);
+      }
+    });
+    return () => listener.subscription.unsubscribe();
   }, [id]);
 
   async function toggleWatchlist() {
