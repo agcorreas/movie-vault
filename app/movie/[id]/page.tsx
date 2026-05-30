@@ -108,6 +108,7 @@ export default function MovieDetailPage({ params }: { params: Promise<{ id: stri
   const [watchlisted, setWatchlisted] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [watchlistId, setWatchlistId] = useState<string | null>(null);
+  const [tab, setTab] = useState<"trailer" | "watch">("trailer");
 
   useEffect(() => {
     fetch(`/api/movie/${id}`)
@@ -313,40 +314,62 @@ export default function MovieDetailPage({ params }: { params: Promise<{ id: stri
               </div>
             </div>
 
-            {/* Where to Watch */}
-            {(detail.watchProviders.flatrate.length > 0 || detail.watchProviders.rent.length > 0 || detail.watchProviders.buy.length > 0) && (
-              <div className="mt-10">
-                <h2 className="text-lg font-semibold mb-4 text-white/80">Where to Watch</h2>
-                <div className="flex flex-col gap-4">
-                  {detail.watchProviders.flatrate.length > 0 && (
-                    <ProviderRow label="Stream" providers={detail.watchProviders.flatrate} link={detail.watchProviders.link} />
+            {/* Trailer / Where to Watch */}
+            {(() => {
+              const hasTrailer = !!detail.trailerKey;
+              const hasProviders = detail.watchProviders.flatrate.length > 0 || detail.watchProviders.rent.length > 0 || detail.watchProviders.buy.length > 0;
+              if (!hasTrailer && !hasProviders) return null;
+              const activeTab = !hasTrailer ? "watch" : !hasProviders ? "trailer" : tab;
+              return (
+                <div className="mt-10">
+                  {hasTrailer && hasProviders && (
+                    <div className="flex gap-1 mb-6 rounded-full bg-white/10 p-0.5 w-fit text-xs font-medium">
+                      <button
+                        onClick={() => setTab("trailer")}
+                        className={`rounded-full px-4 py-1.5 transition cursor-pointer ${activeTab === "trailer" ? "bg-white text-black" : "text-white/60 hover:text-white"}`}
+                      >
+                        Trailer
+                      </button>
+                      <button
+                        onClick={() => setTab("watch")}
+                        className={`rounded-full px-4 py-1.5 transition cursor-pointer ${activeTab === "watch" ? "bg-white text-black" : "text-white/60 hover:text-white"}`}
+                      >
+                        Where to Watch
+                      </button>
+                    </div>
                   )}
-                  {detail.watchProviders.rent.length > 0 && (
-                    <ProviderRow label="Rent" providers={detail.watchProviders.rent} link={detail.watchProviders.link} />
-                  )}
-                  {detail.watchProviders.buy.length > 0 && (
-                    <ProviderRow label="Buy" providers={detail.watchProviders.buy} link={detail.watchProviders.link} />
-                  )}
-                </div>
-                <p className="text-xs text-white/25 mt-3">Argentina availability via JustWatch</p>
-              </div>
-            )}
 
-            {/* Trailer */}
-            {detail.trailerKey && (
-              <div className="mt-14">
-                <h2 className="text-lg font-semibold mb-4 text-white/80">Trailer</h2>
-                <div className="relative w-full aspect-video max-w-2xl rounded-2xl overflow-hidden bg-black/40">
-                  <iframe
-                    src={`https://www.youtube.com/embed/${detail.trailerKey}`}
-                    title={`${detail.title} trailer`}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    className="absolute inset-0 w-full h-full"
-                  />
+                  {activeTab === "trailer" && hasTrailer && (
+                    <div className="relative w-full aspect-video max-w-2xl rounded-2xl overflow-hidden bg-black/40">
+                      <iframe
+                        src={`https://www.youtube.com/embed/${detail.trailerKey}`}
+                        title={`${detail.title} trailer`}
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        className="absolute inset-0 w-full h-full"
+                      />
+                    </div>
+                  )}
+
+                  {activeTab === "watch" && hasProviders && (
+                    <div>
+                      <div className="flex flex-col gap-4">
+                        {detail.watchProviders.flatrate.length > 0 && (
+                          <ProviderRow label="Stream" providers={detail.watchProviders.flatrate} link={detail.watchProviders.link} />
+                        )}
+                        {detail.watchProviders.rent.length > 0 && (
+                          <ProviderRow label="Rent" providers={detail.watchProviders.rent} link={detail.watchProviders.link} />
+                        )}
+                        {detail.watchProviders.buy.length > 0 && (
+                          <ProviderRow label="Buy" providers={detail.watchProviders.buy} link={detail.watchProviders.link} />
+                        )}
+                      </div>
+                      <p className="text-xs text-white/25 mt-3">Argentina availability via JustWatch</p>
+                    </div>
+                  )}
                 </div>
-              </div>
-            )}
+              );
+            })()}
           </div>
         </>
       )}
