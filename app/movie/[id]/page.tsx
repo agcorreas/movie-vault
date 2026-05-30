@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { POSTER_BASE, BACKDROP_BASE } from "@/lib/tmdb";
 import RatingBadge from "@/components/RatingBadge";
+import AuthButton from "@/components/AuthButton";
 import { createClient } from "@/lib/supabase/client";
 
 interface MovieDetail {
@@ -174,6 +175,7 @@ export default function MovieDetailPage({ params }: { params: Promise<{ id: stri
           </Link>
           <span className="text-white/20 shrink-0">/</span>
           <span className="text-white/60 text-sm truncate flex-1">{detail?.title ?? "…"}</span>
+          <AuthButton />
         </div>
       </header>
 
