@@ -30,13 +30,15 @@ export default function HomeContent({ initialQuery = "" }: Props) {
   const [directorName, setDirectorName] = useState<string | null>(null);
   const [watchlistIds, setWatchlistIds] = useState<number[]>([]);
   const [forYouMode, setForYouMode] = useState(false);
+  const [topRatedMode, setTopRatedMode] = useState(false);
 
-  const load = useCallback(async (q: string, gId: number | null, p: number, append: boolean, mode: "movie" | "director" = searchMode) => {
+  const load = useCallback(async (q: string, gId: number | null, p: number, append: boolean, mode: "movie" | "director" = searchMode, filter?: string) => {
     setLoading(true);
     setError(false);
     try {
       const params = new URLSearchParams({ page: String(p), query: q, mode });
       if (gId) params.set("genreId", String(gId));
+      if (filter) params.set("filter", filter);
       const res = await fetch(`/api/movies?${params}`);
       const data = await res.json();
       setMovies((prev) => append ? [...prev, ...data.results] : data.results);
@@ -53,8 +55,8 @@ export default function HomeContent({ initialQuery = "" }: Props) {
     if (forYouMode) return;
     setPage(1);
     setMovies([]);
-    load(query, genreId, 1, false);
-  }, [query, genreId, searchMode, load, forYouMode]);
+    load(query, genreId, 1, false, searchMode, topRatedMode ? "top_rated" : undefined);
+  }, [query, genreId, searchMode, load, forYouMode, topRatedMode]);
 
   useEffect(() => {
     const supabase = createClient();
@@ -78,11 +80,23 @@ export default function HomeContent({ initialQuery = "" }: Props) {
       } else {
         setWatchlistIds([]);
         setForYouMode(false);
+        setTopRatedMode(false);
       }
     });
 
     return () => listener.subscription.unsubscribe();
   }, []);
+
+  const handleTopRated = useCallback(() => {
+    if (topRatedMode) {
+      setTopRatedMode(false);
+      return;
+    }
+    setTopRatedMode(true);
+    setForYouMode(false);
+    setGenreId(null);
+    setQuery("");
+  }, [topRatedMode]);
 
   const handleForYou = useCallback(async () => {
     if (forYouMode) {
@@ -90,6 +104,7 @@ export default function HomeContent({ initialQuery = "" }: Props) {
       return;
     }
     setForYouMode(true);
+    setTopRatedMode(false);
     setGenreId(null);
     setQuery("");
     setPage(1);
@@ -116,11 +131,13 @@ export default function HomeContent({ initialQuery = "" }: Props) {
 
   const handleSearch = useCallback((q: string) => {
     setForYouMode(false);
+    setTopRatedMode(false);
     setQuery(q);
   }, []);
 
   const handleGenre = useCallback((id: number | null) => {
     setForYouMode(false);
+    setTopRatedMode(false);
     setGenreId(id);
     setQuery("");
   }, []);
@@ -128,7 +145,7 @@ export default function HomeContent({ initialQuery = "" }: Props) {
   const loadMore = () => {
     const next = page + 1;
     setPage(next);
-    load(query, genreId, next, true, searchMode);
+    load(query, genreId, next, true, searchMode, topRatedMode ? "top_rated" : undefined);
   };
 
   return (
@@ -155,10 +172,12 @@ export default function HomeContent({ initialQuery = "" }: Props) {
         </div>
         <div className="max-w-7xl mx-auto">
           <GenreBar
-            selected={forYouMode ? -1 : genreId}
+            selected={forYouMode || topRatedMode ? -1 : genreId}
             onSelect={handleGenre}
             forYouActive={forYouMode}
             onForYou={watchlistIds.length > 0 ? handleForYou : undefined}
+            topRatedActive={topRatedMode}
+            onTopRated={handleTopRated}
           />
         </div>
       </header>

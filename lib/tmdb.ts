@@ -142,6 +142,12 @@ export async function fetchMovieCredits(id: number): Promise<{ director: string 
   return { director };
 }
 
+export async function fetchTopRatedMovies(page = 1): Promise<{ results: TmdbMovie[]; total_pages: number }> {
+  const res = await fetch(url("/movie/top_rated", { page: String(page), include_adult: "false" }), { next: { revalidate: 3600 } });
+  if (!res.ok) throw new Error("TMDB top rated fetch failed");
+  return res.json();
+}
+
 export async function fetchMovieRecommendations(id: number): Promise<TmdbMovie[]> {
   const res = await fetch(url(`/movie/${id}/recommendations`), { next: { revalidate: 3600 } });
   if (!res.ok) return [];

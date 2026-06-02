@@ -11,9 +11,11 @@ interface Props {
   onSelect: (id: number | null) => void;
   forYouActive?: boolean;
   onForYou?: () => void;
+  topRatedActive?: boolean;
+  onTopRated?: () => void;
 }
 
-export default function GenreBar({ selected, onSelect, forYouActive, onForYou }: Props) {
+export default function GenreBar({ selected, onSelect, forYouActive, onForYou, topRatedActive, onTopRated }: Props) {
   const [genres, setGenres] = useState<Genre[]>([]);
   const activeRef = useRef<HTMLButtonElement | null>(null);
 
@@ -45,6 +47,16 @@ export default function GenreBar({ selected, onSelect, forYouActive, onForYou }:
             ✦ For You
           </button>
         )}
+        <button
+          onClick={onTopRated}
+          className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-200 cursor-pointer ${
+            topRatedActive
+              ? "bg-white text-black shadow"
+              : "bg-white/8 text-white/60 hover:bg-white/15 hover:text-white"
+          }`}
+        >
+          Top Rated
+        </button>
         {pills.map((g) => {
           const active = selected === g.id;
           return (

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { fetchMovies, searchDirector, fetchDirectorMovies } from "@/lib/tmdb";
+import { fetchMovies, fetchTopRatedMovies, searchDirector, fetchDirectorMovies } from "@/lib/tmdb";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
@@ -7,8 +7,13 @@ export async function GET(req: NextRequest) {
   const query = searchParams.get("query") ?? "";
   const genreId = searchParams.get("genreId") ? Number(searchParams.get("genreId")) : null;
   const mode = searchParams.get("mode") ?? "movie"; // "movie" | "director"
+  const filter = searchParams.get("filter");
 
   try {
+    if (filter === "top_rated") {
+      return NextResponse.json(await fetchTopRatedMovies(page));
+    }
+
     if (query) {
       if (mode === "director") {
         const director = await searchDirector(query);
