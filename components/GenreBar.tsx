@@ -9,9 +9,11 @@ interface Genre {
 interface Props {
   selected: number | null;
   onSelect: (id: number | null) => void;
+  forYouActive?: boolean;
+  onForYou?: () => void;
 }
 
-export default function GenreBar({ selected, onSelect }: Props) {
+export default function GenreBar({ selected, onSelect, forYouActive, onForYou }: Props) {
   const [genres, setGenres] = useState<Genre[]>([]);
   const activeRef = useRef<HTMLButtonElement | null>(null);
 
@@ -31,6 +33,18 @@ export default function GenreBar({ selected, onSelect }: Props) {
   return (
     <div className="relative">
       <div className="flex gap-2 overflow-x-auto scrollbar-hide px-4 py-3">
+        {onForYou && (
+          <button
+            onClick={onForYou}
+            className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-200 cursor-pointer ${
+              forYouActive
+                ? "bg-white text-black shadow"
+                : "bg-white/8 text-white/60 hover:bg-white/15 hover:text-white"
+            }`}
+          >
+            ✦ For You
+          </button>
+        )}
         {pills.map((g) => {
           const active = selected === g.id;
           return (

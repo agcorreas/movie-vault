@@ -142,6 +142,13 @@ export async function fetchMovieCredits(id: number): Promise<{ director: string 
   return { director };
 }
 
+export async function fetchMovieRecommendations(id: number): Promise<TmdbMovie[]> {
+  const res = await fetch(url(`/movie/${id}/recommendations`), { next: { revalidate: 3600 } });
+  if (!res.ok) return [];
+  const data = await res.json();
+  return data.results ?? [];
+}
+
 export async function fetchMovieVideos(id: number): Promise<{ trailerKey: string | null }> {
   const res = await fetch(url(`/movie/${id}/videos`), { next: { revalidate: 3600 } });
   if (!res.ok) return { trailerKey: null };

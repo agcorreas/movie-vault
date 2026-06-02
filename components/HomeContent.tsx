@@ -5,6 +5,7 @@ import SearchBar from "@/components/SearchBar";
 import MovieGrid from "@/components/MovieGrid";
 import GenreBar from "@/components/GenreBar";
 import AuthButton from "@/components/AuthButton";
+import { createClient } from "@/lib/supabase/client";
 
 interface Movie {
   id: number;
@@ -27,6 +28,8 @@ export default function HomeContent({ initialQuery = "" }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [directorName, setDirectorName] = useState<string | null>(null);
+  const [watchlistIds, setWatchlistIds] = useState<number[]>([]);
+  const [forYouMode, setForYouMode] = useState(false);
 
   const load = useCallback(async (q: string, gId: number | null, p: number, append: boolean, mode: "movie" | "director" = searchMode) => {
     setLoading(true);
@@ -47,16 +50,77 @@ export default function HomeContent({ initialQuery = "" }: Props) {
   }, [searchMode]);
 
   useEffect(() => {
+    if (forYouMode) return;
     setPage(1);
     setMovies([]);
     load(query, genreId, 1, false);
-  }, [query, genreId, searchMode, load]);
+  }, [query, genreId, searchMode, load, forYouMode]);
+
+  useEffect(() => {
+    const supabase = createClient();
+
+    async function loadWatchlist(userId: string) {
+      const { data } = await supabase
+        .from("watchlist")
+        .select("movie_id")
+        .eq("user_id", userId)
+        .order("added_at", { ascending: false });
+      setWatchlistIds((data ?? []).map((r: { movie_id: number }) => r.movie_id));
+    }
+
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) loadWatchlist(user.id);
+    });
+
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        loadWatchlist(session.user.id);
+      } else {
+        setWatchlistIds([]);
+        setForYouMode(false);
+      }
+    });
+
+    return () => listener.subscription.unsubscribe();
+  }, []);
+
+  const handleForYou = useCallback(async () => {
+    if (forYouMode) {
+      setForYouMode(false);
+      return;
+    }
+    setForYouMode(true);
+    setGenreId(null);
+    setQuery("");
+    setPage(1);
+    setMovies([]);
+    setDirectorName(null);
+    setLoading(true);
+    setError(false);
+    try {
+      const sampleIds = watchlistIds.slice(0, 5);
+      const params = new URLSearchParams({
+        movieIds: sampleIds.join(","),
+        excludeIds: watchlistIds.join(","),
+      });
+      const res = await fetch(`/api/recommendations?${params}`);
+      const data = await res.json();
+      setMovies(data.results ?? []);
+      setTotalPages(1);
+    } catch {
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  }, [forYouMode, watchlistIds]);
 
   const handleSearch = useCallback((q: string) => {
+    setForYouMode(false);
     setQuery(q);
   }, []);
 
   const handleGenre = useCallback((id: number | null) => {
+    setForYouMode(false);
     setGenreId(id);
     setQuery("");
   }, []);
@@ -90,7 +154,12 @@ export default function HomeContent({ initialQuery = "" }: Props) {
           <AuthButton />
         </div>
         <div className="max-w-7xl mx-auto">
-          <GenreBar selected={genreId} onSelect={handleGenre} />
+          <GenreBar
+            selected={forYouMode ? -1 : genreId}
+            onSelect={handleGenre}
+            forYouActive={forYouMode}
+            onForYou={watchlistIds.length > 0 ? handleForYou : undefined}
+          />
         </div>
       </header>
 
