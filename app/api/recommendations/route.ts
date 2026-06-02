@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
       return true;
     })
     .sort((a, b) => b.vote_average - a.vote_average)
-    .slice(0, 20);
+    .slice(0, 36);
 
   return NextResponse.json({ results });
 }
