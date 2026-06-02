@@ -170,16 +170,18 @@ export default function HomeContent({ initialQuery = "" }: Props) {
           </div>
           <AuthButton />
         </div>
-        <div className="max-w-7xl mx-auto">
-          <GenreBar
-            selected={forYouMode || topRatedMode ? -1 : genreId}
-            onSelect={handleGenre}
-            forYouActive={forYouMode}
-            onForYou={watchlistIds.length > 0 ? handleForYou : undefined}
-            topRatedActive={topRatedMode}
-            onTopRated={handleTopRated}
-          />
-        </div>
+        {!query && (
+          <div className="max-w-7xl mx-auto">
+            <GenreBar
+              selected={forYouMode || topRatedMode ? -1 : genreId}
+              onSelect={handleGenre}
+              forYouActive={forYouMode}
+              onForYou={watchlistIds.length > 0 ? handleForYou : undefined}
+              topRatedActive={topRatedMode}
+              onTopRated={handleTopRated}
+            />
+          </div>
+        )}
       </header>
 
       <section className="max-w-7xl mx-auto px-4 py-8">
