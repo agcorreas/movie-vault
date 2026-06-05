@@ -59,6 +59,7 @@ export async function fetchMovies(
     if (providerIds.length > 0) {
       params.with_watch_providers = providerIds.join("|");
       params.watch_region = "AR";
+      params.with_watch_monetization_types = "flatrate";
     }
     endpoint = url("/discover/movie", params);
   }
@@ -155,7 +156,21 @@ export async function fetchMovieCredits(id: number): Promise<{ director: string 
   return { director };
 }
 
-export async function fetchTopRatedMovies(page = 1): Promise<{ results: TmdbMovie[]; total_pages: number }> {
+export async function fetchTopRatedMovies(page = 1, providerIds: number[] = []): Promise<{ results: TmdbMovie[]; total_pages: number }> {
+  if (providerIds.length > 0) {
+    const params: Record<string, string> = {
+      sort_by: "vote_average.desc",
+      "vote_count.gte": "300",
+      page: String(page),
+      include_adult: "false",
+      with_watch_providers: providerIds.join("|"),
+      watch_region: "AR",
+      with_watch_monetization_types: "flatrate",
+    };
+    const res = await fetch(url("/discover/movie", params), { next: { revalidate: 3600 } });
+    if (!res.ok) throw new Error("TMDB top rated fetch failed");
+    return res.json();
+  }
   const res = await fetch(url("/movie/top_rated", { page: String(page), include_adult: "false" }), { next: { revalidate: 3600 } });
   if (!res.ok) throw new Error("TMDB top rated fetch failed");
   return res.json();

@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
 
   try {
     if (filter === "top_rated") {
-      return NextResponse.json(await fetchTopRatedMovies(page));
+      return NextResponse.json(await fetchTopRatedMovies(page, providerIds));
     }
 
     if (query) {
