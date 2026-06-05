@@ -8,6 +8,8 @@ export async function GET(req: NextRequest) {
   const genreId = searchParams.get("genreId") ? Number(searchParams.get("genreId")) : null;
   const mode = searchParams.get("mode") ?? "movie"; // "movie" | "director"
   const filter = searchParams.get("filter");
+  const providerIds = (searchParams.get("providerIds") ?? "")
+    .split(",").map(Number).filter(Boolean);
 
   try {
     if (filter === "top_rated") {
@@ -34,7 +36,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json(await fetchMovies(page, query, null));
     }
 
-    return NextResponse.json(await fetchMovies(page, query, genreId));
+    return NextResponse.json(await fetchMovies(page, query, genreId, providerIds));
   } catch {
     return NextResponse.json({ error: "Failed to fetch movies" }, { status: 500 });
   }

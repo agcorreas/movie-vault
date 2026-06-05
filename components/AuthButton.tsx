@@ -63,6 +63,12 @@ export default function AuthButton() {
       >
         Watchlist
       </Link>
+      <Link
+        href="/settings"
+        className="text-sm text-white/60 hover:text-white transition hidden sm:block"
+      >
+        Settings
+      </Link>
       {username && (
         <span className="text-sm text-white/40 hidden sm:block truncate max-w-[160px]">
           {username}

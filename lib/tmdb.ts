@@ -42,6 +42,7 @@ export async function fetchMovies(
   page = 1,
   query = "",
   genreId: number | null = null,
+  providerIds: number[] = [],
 ): Promise<{ results: TmdbMovie[]; total_pages: number }> {
   let endpoint: string;
   if (query) {
@@ -55,12 +56,24 @@ export async function fetchMovies(
       include_adult: "false",
     };
     if (genreId) params.with_genres = String(genreId);
+    if (providerIds.length > 0) {
+      params.with_watch_providers = providerIds.join("|");
+      params.watch_region = "AR";
+    }
     endpoint = url("/discover/movie", params);
   }
 
   const res = await fetch(endpoint, { next: { revalidate: 3600 } });
   if (!res.ok) throw new Error("TMDB fetch failed");
   return res.json();
+}
+
+export async function fetchAvailableProviders(region = "AR"): Promise<WatchProvider[]> {
+  const res = await fetch(url("/watch/providers/movie", { watch_region: region }), { next: { revalidate: 86400 } });
+  if (!res.ok) return [];
+  const data = await res.json();
+  return (data.results as (WatchProvider & { display_priority: number })[])
+    .sort((a, b) => a.display_priority - b.display_priority);
 }
 
 export async function fetchMovieDetail(id: number): Promise<TmdbMovieDetail> {

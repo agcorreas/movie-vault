@@ -29,16 +29,19 @@ export default function HomeContent({ initialQuery = "" }: Props) {
   const [error, setError] = useState(false);
   const [directorName, setDirectorName] = useState<string | null>(null);
   const [watchlistIds, setWatchlistIds] = useState<number[]>([]);
+  const [providerIds, setProviderIds] = useState<number[]>([]);
   const [forYouMode, setForYouMode] = useState(false);
   const [topRatedMode, setTopRatedMode] = useState(false);
+  const [myServicesMode, setMyServicesMode] = useState(false);
 
-  const load = useCallback(async (q: string, gId: number | null, p: number, append: boolean, mode: "movie" | "director" = searchMode, filter?: string) => {
+  const load = useCallback(async (q: string, gId: number | null, p: number, append: boolean, mode: "movie" | "director" = searchMode, filter?: string, pIds?: number[]) => {
     setLoading(true);
     setError(false);
     try {
       const params = new URLSearchParams({ page: String(p), query: q, mode });
       if (gId) params.set("genreId", String(gId));
       if (filter) params.set("filter", filter);
+      if (pIds && pIds.length > 0) params.set("providerIds", pIds.join(","));
       const res = await fetch(`/api/movies?${params}`);
       const data = await res.json();
       setMovies((prev) => append ? [...prev, ...data.results] : data.results);
@@ -52,11 +55,11 @@ export default function HomeContent({ initialQuery = "" }: Props) {
   }, [searchMode]);
 
   useEffect(() => {
-    if (forYouMode) return;
+    if (forYouMode || myServicesMode) return;
     setPage(1);
     setMovies([]);
     load(query, genreId, 1, false, searchMode, topRatedMode ? "top_rated" : undefined);
-  }, [query, genreId, searchMode, load, forYouMode, topRatedMode]);
+  }, [query, genreId, searchMode, load, forYouMode, topRatedMode, myServicesMode]);
 
   useEffect(() => {
     const supabase = createClient();
@@ -71,16 +74,22 @@ export default function HomeContent({ initialQuery = "" }: Props) {
     }
 
     supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) loadWatchlist(user.id);
+      if (user) {
+        loadWatchlist(user.id);
+        setProviderIds((user.user_metadata?.provider_ids as number[]) ?? []);
+      }
     });
 
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
         loadWatchlist(session.user.id);
+        setProviderIds((session.user.user_metadata?.provider_ids as number[]) ?? []);
       } else {
         setWatchlistIds([]);
+        setProviderIds([]);
         setForYouMode(false);
         setTopRatedMode(false);
+        setMyServicesMode(false);
       }
     });
 
@@ -94,9 +103,25 @@ export default function HomeContent({ initialQuery = "" }: Props) {
     }
     setTopRatedMode(true);
     setForYouMode(false);
+    setMyServicesMode(false);
     setGenreId(null);
     setQuery("");
   }, [topRatedMode]);
+
+  const handleMyServices = useCallback(() => {
+    if (myServicesMode) {
+      setMyServicesMode(false);
+      return;
+    }
+    setMyServicesMode(true);
+    setForYouMode(false);
+    setTopRatedMode(false);
+    setGenreId(null);
+    setQuery("");
+    setPage(1);
+    setDirectorName(null);
+    load("", null, 1, false, "movie", undefined, providerIds);
+  }, [myServicesMode, providerIds, load]);
 
   const handleForYou = useCallback(async () => {
     if (forYouMode) {
@@ -105,6 +130,7 @@ export default function HomeContent({ initialQuery = "" }: Props) {
     }
     setForYouMode(true);
     setTopRatedMode(false);
+    setMyServicesMode(false);
     setGenreId(null);
     setQuery("");
     setPage(1);
@@ -132,12 +158,14 @@ export default function HomeContent({ initialQuery = "" }: Props) {
   const handleSearch = useCallback((q: string) => {
     setForYouMode(false);
     setTopRatedMode(false);
+    setMyServicesMode(false);
     setQuery(q);
   }, []);
 
   const handleGenre = useCallback((id: number | null) => {
     setForYouMode(false);
     setTopRatedMode(false);
+    setMyServicesMode(false);
     setGenreId(id);
     setQuery("");
   }, []);
@@ -145,7 +173,7 @@ export default function HomeContent({ initialQuery = "" }: Props) {
   const loadMore = () => {
     const next = page + 1;
     setPage(next);
-    load(query, genreId, next, true, searchMode, topRatedMode ? "top_rated" : undefined);
+    load(query, genreId, next, true, searchMode, topRatedMode ? "top_rated" : undefined, myServicesMode ? providerIds : undefined);
   };
 
   return (
@@ -173,10 +201,12 @@ export default function HomeContent({ initialQuery = "" }: Props) {
         {!query && (
           <div className="max-w-7xl mx-auto">
             <GenreBar
-              selected={forYouMode || topRatedMode ? -1 : genreId}
+              selected={forYouMode || topRatedMode || myServicesMode ? -1 : genreId}
               onSelect={handleGenre}
               forYouActive={forYouMode}
               onForYou={watchlistIds.length > 0 ? handleForYou : undefined}
+              myServicesActive={myServicesMode}
+              onMyServices={providerIds.length > 0 ? handleMyServices : undefined}
               topRatedActive={topRatedMode}
               onTopRated={handleTopRated}
             />

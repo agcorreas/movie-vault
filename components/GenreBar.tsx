@@ -11,11 +11,13 @@ interface Props {
   onSelect: (id: number | null) => void;
   forYouActive?: boolean;
   onForYou?: () => void;
+  myServicesActive?: boolean;
+  onMyServices?: () => void;
   topRatedActive?: boolean;
   onTopRated?: () => void;
 }
 
-export default function GenreBar({ selected, onSelect, forYouActive, onForYou, topRatedActive, onTopRated }: Props) {
+export default function GenreBar({ selected, onSelect, forYouActive, onForYou, myServicesActive, onMyServices, topRatedActive, onTopRated }: Props) {
   const [genres, setGenres] = useState<Genre[]>([]);
   const activeRef = useRef<HTMLButtonElement | null>(null);
 
@@ -45,6 +47,18 @@ export default function GenreBar({ selected, onSelect, forYouActive, onForYou, t
             }`}
           >
             ✦ For You
+          </button>
+        )}
+        {onMyServices && (
+          <button
+            onClick={onMyServices}
+            className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-200 cursor-pointer ${
+              myServicesActive
+                ? "bg-white text-black shadow"
+                : "bg-white/8 text-white/60 hover:bg-white/15 hover:text-white"
+            }`}
+          >
+            My Services
           </button>
         )}
         <button
