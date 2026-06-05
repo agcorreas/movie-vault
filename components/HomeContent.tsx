@@ -55,10 +55,12 @@ export default function HomeContent({ initialQuery = "" }: Props) {
   }, [searchMode]);
 
   useEffect(() => {
-    if (forYouMode || myServicesMode) return;
+    if (forYouMode) return;
     setPage(1);
     setMovies([]);
-    load(query, genreId, 1, false, searchMode, topRatedMode ? "top_rated" : undefined);
+    load(query, genreId, 1, false, searchMode, topRatedMode ? "top_rated" : undefined, myServicesMode ? providerIds : undefined);
+  // providerIds intentionally omitted: effect re-captures it when myServicesMode changes
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query, genreId, searchMode, load, forYouMode, topRatedMode, myServicesMode]);
 
   useEffect(() => {
@@ -103,25 +105,13 @@ export default function HomeContent({ initialQuery = "" }: Props) {
     }
     setTopRatedMode(true);
     setForYouMode(false);
-    setMyServicesMode(false);
     setGenreId(null);
     setQuery("");
   }, [topRatedMode]);
 
   const handleMyServices = useCallback(() => {
-    if (myServicesMode) {
-      setMyServicesMode(false);
-      return;
-    }
-    setMyServicesMode(true);
-    setForYouMode(false);
-    setTopRatedMode(false);
-    setGenreId(null);
-    setQuery("");
-    setPage(1);
-    setDirectorName(null);
-    load("", null, 1, false, "movie", undefined, providerIds);
-  }, [myServicesMode, providerIds, load]);
+    setMyServicesMode((prev) => !prev);
+  }, []);
 
   const handleForYou = useCallback(async () => {
     if (forYouMode) {
@@ -158,14 +148,12 @@ export default function HomeContent({ initialQuery = "" }: Props) {
   const handleSearch = useCallback((q: string) => {
     setForYouMode(false);
     setTopRatedMode(false);
-    setMyServicesMode(false);
     setQuery(q);
   }, []);
 
   const handleGenre = useCallback((id: number | null) => {
     setForYouMode(false);
     setTopRatedMode(false);
-    setMyServicesMode(false);
     setGenreId(id);
     setQuery("");
   }, []);
@@ -201,7 +189,7 @@ export default function HomeContent({ initialQuery = "" }: Props) {
         {!query && (
           <div className="max-w-7xl mx-auto">
             <GenreBar
-              selected={forYouMode || topRatedMode || myServicesMode ? -1 : genreId}
+              selected={forYouMode || topRatedMode ? -1 : genreId}
               onSelect={handleGenre}
               forYouActive={forYouMode}
               onForYou={watchlistIds.length > 0 ? handleForYou : undefined}
